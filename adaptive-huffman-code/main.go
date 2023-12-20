@@ -1,69 +1,41 @@
 package main
 
 import (
-	"bufio"
 	"flag"
-	"fmt"
-	"os"
-
-	"github.com/icza/bitio"
 )
 
 func main() {
-	var m int
+	var d bool
+	var m uint
 	var mode bool
-	var k int
-	var n int
+	var k uint
+	var n uint
 	var inputFlag string
 	var outputFlag string
-	flag.IntVar(&m, "length", 8, "Word length in bits")
+	flag.BoolVar(&d, "decode", false, "If set to true, tries to decode the file.")
+	flag.UintVar(&m, "length", 8, "Word length in bits. From 2 to 16")
 	flag.BoolVar(&mode, "mode", false, "Mode of the algorithm. If set to true, "+
 		"zeroes all the word frequencies after reaching 2^n. If set to false, stops"+
 		" reconstruction after reaching 2^n. Defaults to false.")
-	flag.IntVar(&k, "freq", 0, "Power of two, on how often to reconstruct the tree")
-	flag.IntVar(&n, "n", 0, "Power of two, when to trigger mode condition, see --mode.")
+	flag.UintVar(&k, "freq", 0, "Power of two, on how often to reconstruct the tree. From 0 to 15")
+	flag.UintVar(&n, "n", 0, "Power of two, when to trigger mode condition, see --mode. From 0 to 15")
 	flag.StringVar(&inputFlag, "input", "-", "If not defined, read from STDIN")
 	flag.StringVar(&outputFlag, "output", "", "If not defined, output to STDOUT")
 	flag.Parse()
 
-	var inputFile *os.File
-	if inputFlag != "-" {
-		var err error
-		inputFile, err = os.Open(inputFlag)
+	if d {
+		decoder, _, writer, err := NewDecoder(inputFlag, outputFlag)
 		if err != nil {
-			fmt.Printf("Failed to open file %s: %s", inputFlag, err)
-			return
+			defer writer.Flush()
+			panic(err)
 		}
-		fmt.Printf(inputFile.Name())
-	}
-
-	var inputReader *bitio.Reader
-	if inputFile != nil {
-		reader := bufio.NewReader(inputFile)
-		inputReader = bitio.NewReader(reader)
+		decoder.Decode()
+		decoder.Writer.Close()
 	} else {
-		reader := bufio.NewReader(os.Stdin)
-		inputReader = bitio.NewReader(reader)
-	}
-
-	var outputFile *os.File
-	if outputFlag != "" {
-		var err error
-		outputFile, err = os.OpenFile(outputFlag, os.O_CREATE, os.ModeAppend)
-		if err != nil {
-			fmt.Printf("Failed to open file %s: %s", outputFlag, err)
-			return
-		}
-		fmt.Printf(outputFile.Name())
-	}
-
-	var outputWriter *bitio.Writer
-	if outputFile != nil {
-		writer := bufio.NewWriter(outputFile)
-		outputWriter = bitio.NewWriter(writer)
-	} else {
-		writer := bufio.NewWriter(os.Stdout)
-		outputWriter = bitio.NewWriter(writer)
+		encoder, _, writer := NewEncoder(uint8(m), k, n, mode, inputFlag, outputFlag)
+		encoder.Encode()
+		encoder.Writer.Close()
+		defer writer.Flush()
 	}
 
 	return
