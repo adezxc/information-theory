@@ -132,6 +132,8 @@ func (e *Encoder) ProcessWord(word uint64, nyt *Tree) *Tree {
 
 func WriteNytIndex(nyt *Tree, writer *bitio.Writer) {
 	nytPath, length := nyt.GetTreeIndex()
+	fmt.Println(length)
+	fmt.Printf("%b\n", nytPath)
 	writer.WriteBits(nytPath, uint8(length))
 }
 
@@ -237,7 +239,7 @@ func (d *Decoder) Decode() error {
 		if current.Nyt {
 			word, err := d.Reader.ReadBits(d.WordLength)
 			if err == io.EOF {
-				break
+				return nil
 			}
 			if err != nil {
 				return err

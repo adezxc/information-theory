@@ -9,7 +9,7 @@ import (
 
 func TestEncodeDecodeWithDummyInput(t *testing.T) {
 	// Dummy input
-	dummyInput := "Hello World!"
+	dummyInput := "aaaaaaaaasssssssssssssssscccccccccccccccwwwwwwwwwwwwwaaaaaaaaasssssssiiiiiiiiieeeeeeeeeeerrrrrrrrrberqwoeiuxzclkjasdljkqlwrmncxpquwepoxcvlj"
 	inputBuffer := bytes.NewBufferString(dummyInput)
 	encodedBuffer := &bytes.Buffer{}
 

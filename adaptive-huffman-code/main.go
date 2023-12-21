@@ -30,11 +30,10 @@ func main() {
 			panic(err)
 		}
 		decoder.Decode()
-		decoder.Writer.Close()
+		defer writer.Flush()
 	} else {
 		encoder, _, writer := NewEncoder(uint8(m), k, n, mode, inputFlag, outputFlag)
 		encoder.Encode()
-		encoder.Writer.Close()
 		defer writer.Flush()
 	}
 

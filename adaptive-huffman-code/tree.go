@@ -33,13 +33,13 @@ func NewTree(value uint64, weight, order int, left, right, parent *Tree, nyt boo
 }
 
 func (t *Tree) ProcessNewCharacter(character uint64) (newChar, nyt *Tree) {
-	t.Right = NewTree(character, 0, t.Order-1, nil, nil, t, false)
+	t.Right = NewTree(character, 1, t.Order-1, nil, nil, t, false)
 	t.Left = NewTree(0, 0, t.Order-2, nil, nil, t, true)
 	t.Nyt = false
 
 	newNode := t.Right
 	nyt = t.Left
-	newNode.Update()
+	t.Update()
 
 	return newNode, nyt
 }
@@ -52,7 +52,7 @@ func (t *Tree) Update() {
 		} else {
 			otherNode = t.Parent.Left
 		}
-		if t.Weight+1 > otherNode.Weight && !otherNode.Nyt {
+		if t.Weight+1 > otherNode.Weight && !otherNode.Nyt && otherNode == t.Parent.Right {
 			t.Parent.Right, t.Parent.Left = t.Parent.Left, t.Parent.Right
 			t.Parent.Right.Order, t.Parent.Left.Order = t.Parent.Left.Order, t.Parent.Right.Order
 		}
