@@ -52,7 +52,7 @@ func (t *Tree) Update() {
 		} else {
 			otherNode = t.Parent.Left
 		}
-		if t.Weight+1 > otherNode.Weight && !otherNode.Nyt && otherNode == t.Parent.Right {
+		if t.Order < otherNode.Order && !otherNode.Nyt {
 			t.Parent.Right, t.Parent.Left = t.Parent.Left, t.Parent.Right
 			t.Parent.Right.Order, t.Parent.Left.Order = t.Parent.Left.Order, t.Parent.Right.Order
 		}
