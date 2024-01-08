@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"log"
 	"testing"
 
 	"github.com/icza/bitio"
@@ -9,7 +10,8 @@ import (
 
 func TestEncodeDecodeWithDummyInput(t *testing.T) {
 	// Dummy input
-	dummyInput := "aaaaaaaaasssssssssssssssscccccccccccccccwwwwwwwwwwwwwaaaaaaaaasssssssiiiiiiiiieeeeeeeeeeerrrrrrrrrberqwoeiuxzclkjasdljkqlwrmncxpquwepoxcvljaaaasss"
+	dummyInput := "aaaaaaaaasssssssssssssssscccccccccccccccwwwwwwwwwwwwwaaaaaaaaasssssssiiiiiiiiieeeeeeeeeeerrrrrrrrrberqwoeeeeiuuuuuuxzclkjasdljkqllllwrmmmmncxppppppqqquwepoxcvljaaaasss"
+	// dummyInput := "abcqsssdkqhweABCDEF"
 	inputBuffer := bytes.NewBufferString(dummyInput)
 	encodedBuffer := &bytes.Buffer{}
 
@@ -24,6 +26,7 @@ func TestEncodeDecodeWithDummyInput(t *testing.T) {
 	if err := encoder.Encode(); err != nil {
 		t.Errorf("Failed to encode: %s", err)
 	}
+	log.Printf("%b\n", encodedBuffer)
 
 	decodedBuffer := bytes.NewBuffer(encodedBuffer.Bytes())
 	decodedOutputBuffer := new(bytes.Buffer)
@@ -41,6 +44,7 @@ func TestEncodeDecodeWithDummyInput(t *testing.T) {
 	if err := decoder.Decode(); err != nil {
 		t.Errorf("Failed to decode: %s", err)
 	}
+	log.Println(seenCharsDecoder)
 	decodedOutput := decodedOutputBuffer.String()
 	if decodedOutput != dummyInput {
 		t.Errorf("Decoded output does not match original input. Got: %s, Want: %s", decodedOutput, dummyInput)

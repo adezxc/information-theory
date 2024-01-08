@@ -7,6 +7,7 @@ import (
 	"math"
 	"os"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/icza/bitio"
 )
 
@@ -108,31 +109,35 @@ func (e *Encoder) Encode() error {
 		nyt = e.ProcessWord(word, nyt)
 	}
 
+	spew.Dump(nyt.GetRoot())
+
 	return nil
 }
 
 func (e *Encoder) ProcessWord(word uint64, nyt *Tree) *Tree {
 	if _, ok := e.SeenCharacters[word]; !ok {
-		var newCharacterPointer *Tree
+		var newChar *Tree
 		WriteNytIndex(nyt, &e.Writer)
 		e.Writer.WriteBits(word, e.WordLength)
 
-		newCharacterPointer, nyt = nyt.ProcessNewCharacter(word)
-		e.SeenCharacters[word] = newCharacterPointer
+		newChar, nyt = nyt.ProcessNewCharacter(word)
+		e.SeenCharacters[word] = newChar
+		if newChar.Parent != nil {
+			newChar.Parent.Update(e.SeenCharacters)
+		}
 		return nyt
 	}
 
 	characterPointer := e.SeenCharacters[word]
 	treeIndex, length := characterPointer.GetTreeIndex()
 	e.Writer.WriteBits(treeIndex, uint8(length))
-	characterPointer.Update()
+	characterPointer.Update(e.SeenCharacters)
 
 	return nyt
 }
 
 func WriteNytIndex(nyt *Tree, writer *bitio.Writer) {
 	nytPath, length := nyt.GetTreeIndex()
-	fmt.Printf("%b\n", nytPath)
 	writer.WriteBits(nytPath, uint8(length))
 }
 
@@ -215,7 +220,8 @@ func (d *Decoder) Decode() error {
 	if err != nil {
 		return err
 	}
-	root.ProcessNewCharacter(word)
+	newChar, _ := root.ProcessNewCharacter(word)
+	d.SeenCharacters[word] = newChar
 	d.Writer.WriteBits(word, d.WordLength)
 
 	var bit bool
@@ -236,6 +242,7 @@ func (d *Decoder) Decode() error {
 			}
 		}
 		if current.Nyt {
+			//	spew.Dump(current.GetRoot())
 			word, err := d.Reader.ReadBits(d.WordLength)
 			if err == io.EOF {
 				return nil
@@ -243,12 +250,18 @@ func (d *Decoder) Decode() error {
 			if err != nil {
 				return err
 			}
-			current.ProcessNewCharacter(word)
-			d.Writer.WriteBits(word, d.WordLength)
+			newChar, _ := current.ProcessNewCharacter(word)
+			d.SeenCharacters[word] = newChar
+			d.Writer.WriteBits(newChar.Value, d.WordLength)
+			if newChar.Parent != nil {
+				newChar.Parent.Update(d.SeenCharacters)
+			}
 		} else {
+			//	spew.Dump(current.GetRoot())
 			d.Writer.WriteBits(current.Value, d.WordLength)
-			current.Update()
+			current.Update(d.SeenCharacters)
 		}
+
 	}
 
 	return nil
